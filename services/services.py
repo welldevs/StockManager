@@ -4,7 +4,15 @@ from datetime import datetime
 from models.document import DocumentModel
 from typing import List
 
-def fetch_invoices(db: Session, query) -> List[dict]:
+def fetch_invoices(db: Session, page: int, page_size: int) -> List[dict]:
+    if page < 1:
+        page = 1
+    if page_size < 1:
+        page_size = 10
+    elif page_size > 100:
+        page_size = 100
+    
+    query = text(f"SELECT * FROM hub.SM_FATURAMENTO_ERP OFFSET {(page - 1) * page_size} ROWS FETCH NEXT {page_size} ROWS ONLY")
     results = db.execute(query).fetchall()
     
     data = []
