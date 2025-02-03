@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from database.database import get_db
+from ..database.database import get_db
 from models.document import DocumentModel
 from services.services import fetch_invoices
 from typing import List
