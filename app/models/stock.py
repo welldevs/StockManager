@@ -9,7 +9,7 @@ class StockModel(BaseModel):
     FAMILIAID: int
     QTDESTQUNITARIO: int
     PADRAOEMBCOMPRA: int
-    QTDESTQEMBCOMPRA: int
+    QTDESTQEMBCOMPRA: float
     VLRCUSTOLIQUIDO: float
     CUSTOLIQUNITARIO: float
     DIASSEMVENDA: Optional[str]
