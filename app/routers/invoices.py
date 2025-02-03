@@ -4,10 +4,11 @@ from ..database.database import get_db
 from models.document import DocumentModel
 from services.services import fetch_invoices
 from typing import List
+from auth.jwt_bearer import JWTBearer  # Importação da autenticação
 
 router = APIRouter(prefix="/v1/invoices", tags=["Invoices"])
 
-@router.get("/", response_model=List[DocumentModel])
+@router.get("/", response_model=List[DocumentModel], dependencies=[Depends(JWTBearer())])
 def get_invoices(
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1, alias="page"),  # Agora page não pode ser menor que 1

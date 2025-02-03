@@ -2,11 +2,12 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from fastapi import FastAPI
-from app.routers import invoices, stock
+from app.routers import invoices, stock, auth
 
 app = FastAPI()
 
-# Incluindo o roteador de invoices
+# Incluir roteadores
+app.include_router(auth.router)
 app.include_router(invoices.router)
 app.include_router(stock.router)
 

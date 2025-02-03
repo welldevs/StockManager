@@ -1,22 +1,25 @@
+import os
+import jwt
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from fastapi import HTTPException
 
-# Chave secreta para assinatura do JWT
-SECRET_KEY = "vilastockmanager"  # 🔴 ALTERE PARA UMA CHAVE SEGURA
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Token válido por 1 hora
+JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_key")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", 60))
 
-# Gera um token JWT para o usuário autenticado
-def create_access_token(data: dict, expires_delta: timedelta = None):
+def create_access_token(data: dict):
+    """Gera um token JWT para o usuário autenticado"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION_MINUTES)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-# Decodifica e valida um token JWT
-def verify_access_token(token: str):
+def verify_token(token: str):
+    """Verifica a validade de um token JWT"""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload  # Retorna os dados do usuário autenticado
-    except JWTError:
-        return None
+        decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
