@@ -1,28 +1,24 @@
-StockManager/
-│── .git/                     # Diretório do Git (não relevante para o código)
-│── app/
-│   ├── main.py               # Ponto de entrada da aplicação
-│   ├── .env                  # Configuração de ambiente
-│   ├── routers/              # Módulo de rotas da API
-│   │   ├── invoices.py       # Endpoints de faturas
-│   │   ├── auth.py           # Endpoints de autenticação
-│   │   ├── stock.py          # Endpoints de estoque
-│   ├── auth/                 # Módulo de autenticação
-│   │   ├── auth.py           # Lógica de autenticação
-│   │   ├── ldap_auth.py      # Autenticação via LDAP
-│   │   ├── jwt_handler.py    # Gerenciamento de tokens JWT
-│   │   ├── jwt_bearer.py     # Middleware JWT
-│   ├── services/             # Módulo de serviços
-│   │   ├── invoice_services.py       # Serviços gerais
-│   │   ├── stock_service.py  # Lógica de estoque
-│   ├── models/               # Modelos de dados
-│   │   ├── document.py       # Modelo de documentos
-│   │   ├── stock.py          # Modelo de estoque
-│   ├── database/             # Módulo de banco de dados
-│   │   ├── database.py       # Configuração do banco
-│── tests/                    # Testes automatizados
-│   ├── test_invoices.py
-│   ├── test_services.py
-│   ├── conftest.py
-│── requirements.txt          # Dependências do projeto
-│── pytest.ini                # Configuração do pytest
+🛡️ O que foi melhorado em relação à segurança?
+
+Melhoria	Como funciona
+Rate Limiting	Bloqueia usuários após múltiplas tentativas.
+Tempo de Resposta Fixo	Evita ataques de "timing" adicionando delays.
+Backoff Exponencial	Atrasos progressivos para mitigar força bruta.
+Mensagem de Erro Genérica	Evita enumeração de usuários.
+Bloqueio Temporário de Usuário	Impede tentativas repetidas após X falhas.
+Registro de Tentativas por IP	Permite monitorar possíveis ataques.
+🚀 Como esse código protege contra ataques?
+Contra ataques de força bruta (brute force)
+
+O usuário tem 5 tentativas antes de ser bloqueado por 5 minutos.
+Cada falha gera um atraso progressivo para tornar ataques automatizados ineficientes.
+Contra ataques de enumeração de usuários
+
+Sempre retorna a mesma mensagem de erro ("Credenciais inválidas") para impedir que um atacante descubra se um usuário existe ou não.
+Contra ataques de timing (Timing Attack)
+
+Introduz um pequeno atraso de resposta, tornando impossível detectar diferenças no tempo de autenticação para usuários válidos e inválidos.
+Contra ataques DDoS de autenticação
+
+Cada tentativa falha causa um atraso, reduzindo a taxa de requisições possíveis.
+Implementação de limitação de tentativas por IP pode ser adicionada no nível do firewall.

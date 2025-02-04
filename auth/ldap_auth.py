@@ -1,39 +1,78 @@
 import os
 import ldap3
 import logging
-from ldap3 import Server, Connection, ALL, NTLM
+import time
+from ldap3 import Server, Connection, ALL
+from ldap3.core.exceptions import LDAPBindError, LDAPException
+from collections import defaultdict
 
-# Configurar logs para debug
-logging.basicConfig(level=logging.DEBUG)
+# Configuração de logs
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("auth.log"),  # Salva logs em arquivo
+        logging.StreamHandler()  # Imprime logs no console
+    ]
+)
 
+# Configurações LDAP
 LDAP_SERVER = os.getenv("LDAP_SERVER")
 LDAP_PORT = int(os.getenv("LDAP_PORT", 389))
-LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
-LDAP_USER_DN = os.getenv("LDAP_USER_DN")
 
-def authenticate_user(username: str, password: str):
-    """Autentica um usuário no LDAP."""
+# Segurança: limitar tentativas para evitar brute-force
+MAX_ATTEMPTS = 5
+BLOCK_TIME = 300  # 5 minutos
+
+failed_attempts = defaultdict(int)
+blocked_users = {}
+
+if not LDAP_SERVER:
+    logging.error("❌ Configuração LDAP incompleta! Verifique LDAP_SERVER.")
+    raise ValueError("Configuração de ambiente incompleta.")
+
+def authenticate_user(email: str, password: str, client_ip: str = "unknown"):
+    """Autentica um usuário no LDAP pelo e-mail e retorna um dicionário se for bem-sucedido."""
     
-    # Testar diferentes formatos de DN do usuário
-    possible_user_dns = [
-        f"CN={username},{LDAP_USER_DN}",
-        f"{username}@vilanova.com.br",  # Formato UPN
-        f"VILANOVA\\{username}"  # NTLM
-    ]
+    logging.info(f"🔍 [{client_ip}] Tentativa de login para {email}")
 
-    for user_dn in possible_user_dns:
-        try:
-            logging.info(f"Tentando autenticar {user_dn} no LDAP {LDAP_SERVER}:{LDAP_PORT}")
+    if not email or not password:
+        logging.warning(f"❌ [{client_ip}] Tentativa de login com credenciais vazias.")
+        return None  # Falha de autenticação
 
-            server = Server(LDAP_SERVER, port=LDAP_PORT, get_info=ALL)
-            conn = Connection(server, user=user_dn, password=password, authentication=NTLM, auto_bind=True)
+    current_time = time.time()
 
-            if conn.bind():
-                logging.info(f"✅ Usuário {username} autenticado com sucesso!")
-                return {"username": username, "message": "Autenticado com sucesso!"}
-            
-            logging.warning(f"❌ Falha na autenticação de {username}")
-        except ldap3.core.exceptions.LDAPException as e:
-            logging.error(f"Erro ao autenticar {username}: {e}")
+    if email in blocked_users and current_time < blocked_users[email]:
+        logging.warning(f"🚫 [{client_ip}] Usuário {email} está temporariamente bloqueado.")
+        return None  # Usuário bloqueado
 
-    return {"detail": "Credenciais inválidas"}
+    try:
+        logging.info(f"🔍 [{client_ip}] Tentando autenticação via LDAP: {email}")
+
+        server = Server(LDAP_SERVER, port=LDAP_PORT, get_info=ALL)
+        conn = Connection(server, user=email, password=password, auto_bind=True)
+
+        if conn.bound:
+            logging.info(f"✅ [{client_ip}] Autenticação bem-sucedida para {email}")
+            conn.unbind()
+
+            # Resetar tentativas falhas se o login for bem-sucedido
+            failed_attempts.pop(email, None)
+            blocked_users.pop(email, None)
+
+            return {"username": email, "message": "Autenticado com sucesso!"}
+
+    except LDAPBindError:
+        logging.warning(f"🔑 [{client_ip}] Falha ao autenticar {email}.")
+    except LDAPException as e:
+        logging.error(f"⚠️ [{client_ip}] Erro no LDAP ao autenticar {email}: {e}")
+
+    # Se a autenticação falhar, contar tentativa
+    failed_attempts[email] += 1
+    logging.warning(f"⚠️ [{client_ip}] Falha total na autenticação para {email}. Tentativa {failed_attempts[email]}/{MAX_ATTEMPTS}")
+
+    if failed_attempts[email] >= MAX_ATTEMPTS:
+        blocked_users[email] = current_time + BLOCK_TIME
+        logging.warning(f"🚫 [{client_ip}] Usuário {email} bloqueado por {BLOCK_TIME} segundos.")
+
+    return None  # Falha de autenticação
