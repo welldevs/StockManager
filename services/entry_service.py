@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, exc
 from typing import List
 from fastapi import HTTPException
-from app.models.entry import EntryModel  # Modelo correto
+from models.entry import EntryModel  # Modelo correto
 
 # Configuração de Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

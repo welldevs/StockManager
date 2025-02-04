@@ -1,8 +1,11 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from fastapi import FastAPI
-from app.routers import invoices, stock, auth, entry
+
+# Adiciona o diretório raiz ao sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from routers import invoices, stock, auth, entry
 
 app = FastAPI()
 

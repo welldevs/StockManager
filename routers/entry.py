@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List
-from app.database.database import get_db
-from app.models.entry import EntryModel
-from app.schemas.entry import EntrySchema  # Agora a importação está correta
-from app.services.entry_service import fetch_entry
-from app.auth.jwt_bearer import JWTBearer  # 🔒 Proteção com JWT
+from database.database import get_db
+from models.entry import EntryModel
+from schemas.entry import EntrySchema  # Agora a importação está correta
+from services.entry_service import fetch_entry
+from auth.jwt_bearer import JWTBearer  # 🔒 Proteção com JWT
 
 router = APIRouter(
     prefix="/v1/entry",

@@ -1,9 +1,15 @@
+import os
+import sys
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from ..database.database import get_db
+from typing import List
+
+# Adiciona o diretório raiz ao sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.database import get_db
 from models.invoice import DocumentModel
 from services.invoice_services import fetch_invoices
-from typing import List
 from auth.jwt_bearer import JWTBearer  # Importação da autenticação
 
 router = APIRouter(prefix="/v1/invoices", tags=["Invoices"])
