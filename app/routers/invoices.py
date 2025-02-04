@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from ..database.database import get_db
-from models.document import DocumentModel
-from services.services import fetch_invoices
+from models.invoice import DocumentModel
+from services.invoice_services import fetch_invoices
 from typing import List
 from auth.jwt_bearer import JWTBearer  # Importação da autenticação
 

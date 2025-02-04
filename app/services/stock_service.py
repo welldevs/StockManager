@@ -20,11 +20,7 @@ def fetch_stock(db: Session, page: int, page_size: int) -> List[dict]:
     elif page_size > 100:
         page_size = 100
 
-    # Ajustando query para diferentes bancos (SQLite vs Oracle)
-    if "sqlite" in str(db.bind.url):
-        query = text(f"SELECT * FROM sm_estoque_erp LIMIT {page_size} OFFSET {(page - 1) * page_size}")
-    else:
-        query = text(f"SELECT * FROM hub.sm_estoque_erp OFFSET {(page - 1) * page_size} ROWS FETCH NEXT {page_size} ROWS ONLY")
+    query = text(f"SELECT * FROM hub.sm_estoque_erp OFFSET {(page - 1) * page_size} ROWS FETCH NEXT {page_size} ROWS ONLY")
     
     try:
         results = db.execute(query).fetchall()

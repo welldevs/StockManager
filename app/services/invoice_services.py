@@ -2,7 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import text, exc
 from datetime import datetime
-from models.document import DocumentModel
+from models.invoice import DocumentModel
 from typing import List
 from fastapi import HTTPException
 
@@ -22,11 +22,7 @@ def fetch_invoices(db: Session, page: int, page_size: int) -> List[dict]:
     elif page_size > 100:
         page_size = 100
 
-    # Detecta se o banco é SQLite
-    if "sqlite" in str(db.bind.url):
-        query = text(f"SELECT * FROM SM_FATURAMENTO_ERP LIMIT {page_size} OFFSET {(page - 1) * page_size}")
-    else:
-        query = text(f"SELECT * FROM hub.SM_FATURAMENTO_ERP OFFSET {(page - 1) * page_size} ROWS FETCH NEXT {page_size} ROWS ONLY")
+    query = text(f"SELECT * FROM hub.SM_FATURAMENTO_ERP OFFSET {(page - 1) * page_size} ROWS FETCH NEXT {page_size} ROWS ONLY")
 
     try:
         results = db.execute(query).fetchall()

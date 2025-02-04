@@ -1,0 +1,28 @@
+StockManager/
+│── .git/                     # Diretório do Git (não relevante para o código)
+│── app/
+│   ├── main.py               # Ponto de entrada da aplicação
+│   ├── .env                  # Configuração de ambiente
+│   ├── routers/              # Módulo de rotas da API
+│   │   ├── invoices.py       # Endpoints de faturas
+│   │   ├── auth.py           # Endpoints de autenticação
+│   │   ├── stock.py          # Endpoints de estoque
+│   ├── auth/                 # Módulo de autenticação
+│   │   ├── auth.py           # Lógica de autenticação
+│   │   ├── ldap_auth.py      # Autenticação via LDAP
+│   │   ├── jwt_handler.py    # Gerenciamento de tokens JWT
+│   │   ├── jwt_bearer.py     # Middleware JWT
+│   ├── services/             # Módulo de serviços
+│   │   ├── invoice_services.py       # Serviços gerais
+│   │   ├── stock_service.py  # Lógica de estoque
+│   ├── models/               # Modelos de dados
+│   │   ├── document.py       # Modelo de documentos
+│   │   ├── stock.py          # Modelo de estoque
+│   ├── database/             # Módulo de banco de dados
+│   │   ├── database.py       # Configuração do banco
+│── tests/                    # Testes automatizados
+│   ├── test_invoices.py
+│   ├── test_services.py
+│   ├── conftest.py
+│── requirements.txt          # Dependências do projeto
+│── pytest.ini                # Configuração do pytest
