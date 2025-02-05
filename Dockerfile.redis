@@ -1,0 +1,14 @@
+# Usa a versão oficial do Redis
+FROM redis:7.0-alpine
+
+# Define um diretório de trabalho para o Redis
+WORKDIR /data
+
+# Copia um arquivo de configuração customizado para o Redis (opcional)
+# COPY redis.conf /usr/local/etc/redis/redis.conf
+
+# Expondo a porta padrão do Redis
+EXPOSE 6379
+
+# Comando para iniciar o Redis
+CMD ["redis-server"]

@@ -1,18 +1,20 @@
-from pydantic import BaseModel
-from typing import Optional
+from sqlalchemy import Column, Integer, String, Date, Numeric
+from sqlalchemy.ext.declarative import declarative_base
 
-class StockModel(BaseModel):
-    EMPRESAID: int
-    PRODUTOID: int
-    FORNECEDORID: int
-    CATEGORIA: Optional[str]
-    FAMILIAID: int
-    QTDESTQUNITARIO: int
-    PADRAOEMBCOMPRA: int
-    QTDESTQEMBCOMPRA: float
-    VLRCUSTOLIQUIDO: float
-    CUSTOLIQUNITARIO: float
-    DIASSEMVENDA: Optional[str]
+Base = declarative_base()
 
-    class Config:
-        from_attributes = True
+class StockModel(Base):
+    __tablename__ = "sm_estoque_erp"
+    __table_args__ = {"schema": "HUB"}
+
+    EMPRESAID = Column(Integer, nullable=False)
+    PRODUTOID = Column(Integer, primary_key=True, index=True)
+    FORNECEDORID = Column(Integer, nullable=True)
+    CATEGORIA = Column(String(100), nullable=True)
+    FAMILIAID = Column(Integer, nullable=True)
+    QTDESTQUNITARIO = Column(Integer, nullable=True)
+    PADRAOEMBCOMPRA = Column(Integer, nullable=True)
+    QTDESTQEMBCOMPRA = Column(Numeric(18, 2), nullable=True)
+    VLRCUSTOLIQUIDO = Column(Numeric(18, 2), nullable=True)
+    CUSTOLIQUNITARIO = Column(Numeric(18, 2), nullable=True)
+    DIASSEMVENDA = Column(String(50), nullable=True)

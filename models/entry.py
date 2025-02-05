@@ -5,7 +5,7 @@ Base = declarative_base()
 
 class EntryModel(Base):
     __tablename__ = "sm_entradas_erp"
-    __table_args__ = {"schema": "HUB"}  # Informando o esquema correto
+    __table_args__ = {"schema": "HUB"}
 
     DOCUMENTO = Column(Integer, primary_key=True, index=True)
     DOCSERIEID = Column(String(10), nullable=True)

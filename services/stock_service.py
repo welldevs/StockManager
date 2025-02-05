@@ -1,42 +1,62 @@
+import json
 import logging
+import redis.asyncio as redis
 from sqlalchemy.orm import Session
-from sqlalchemy import text, exc
+from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 from fastapi import HTTPException
-from models.stock import StockModel
+from schemas.stock import StockSchema
+from models.stock import StockModel  # ✅ Importando a Model correta
 
 # Configuração de Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-def fetch_stock(db: Session, page: int, page_size: int) -> List[dict]:
+# Configuração do Redis
+redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+
+async def fetch_stock(db: Session, page: int, page_size: int) -> List[StockSchema]:
+    """Consulta o estoque no banco de dados e armazena no cache Redis."""
+
     logger.info(f"Recebida solicitação para fetch_stock - Página: {page}, Tamanho da Página: {page_size}")
-    
+
     if page < 1:
-        logger.warning("Número da página inválido (menor que 1)")
         raise HTTPException(status_code=400, detail="O número da página deve ser maior que 0")
     if page_size < 1:
         page_size = 10
     elif page_size > 100:
         page_size = 100
 
-    query = text(f"SELECT * FROM hub.sm_estoque_erp OFFSET {(page - 1) * page_size} ROWS FETCH NEXT {page_size} ROWS ONLY")
-    
+    cache_key = f"stock:page:{page}:size:{page_size}"  # 🔹 Define a chave do cache Redis
+
+    # 🔍 Verifica se os dados já estão no Redis antes de consultar o banco
+    cached_data = await redis_client.get(cache_key)
+    if cached_data:
+        logger.info("🔄 Dados carregados do cache Redis")
+        return json.loads(cached_data)
+
     try:
-        results = db.execute(query).fetchall()
-        logger.info(f"Consulta SQL executada com sucesso - Retornados {len(results)} registros")
-    except exc.SQLAlchemyError as e:
-        logger.error(f"Erro ao consultar o banco de dados: {str(e)}")
+        # 🔄 Consulta utilizando a Model SQLAlchemy (ORM)
+        offset = (page - 1) * page_size
+        stock_data = db.query(StockModel).offset(offset).limit(page_size).all()
+        
+        if not stock_data:
+            logger.warning("Nenhum registro encontrado para os parâmetros informados.")
+            return []
+
+        # ✅ Converte os dados para `StockSchema`
+        serialized_data = [StockSchema.from_orm(item).model_dump() for item in stock_data]
+
+        # 🟢 Salva os dados no cache Redis por 5 minutos
+        await redis_client.setex(cache_key, 300, json.dumps(serialized_data))
+        logger.info("🟢 Dados de estoque armazenados no cache Redis")
+
+        return serialized_data
+
+    except SQLAlchemyError as e:
+        logger.error(f"❌ Erro ao consultar o banco de dados: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao consultar o banco de dados: {str(e)}")
-    
-    if not results:
-        logger.warning("Nenhum registro encontrado para os parâmetros informados.")
-        return []
 
-    data = []
-    for row in results:
-        row_dict = {column: value for column, value in zip(StockModel.__annotations__.keys(), row)}
-        data.append(row_dict)
-
-    logger.info("Retornando dados de estoque com sucesso.")
-    return data
+    except Exception as e:
+        logger.error(f"❌ Erro inesperado: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")

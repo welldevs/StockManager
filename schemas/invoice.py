@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import date
 
-class InvoiceModel(BaseModel):
+class InvoiceSchema(BaseModel):
     DOCUMENTOID: int
     DOCSERIEID: Optional[str]
     EMPRESAID: int
@@ -16,7 +17,10 @@ class InvoiceModel(BaseModel):
     VLRITEMUNITARIOVENDA: float
     VLRITEMTOTALVENDA: float
     PRAZOPAGAMENTO: int
-    DTAFATURAMENTO: Optional[str]
-    DTAINCLUSAO: Optional[str]
+    DTAFATURAMENTO: Optional[date]
+    DTAINCLUSAO: Optional[date]
     USUINCLUSAO: Optional[str]
     SEQMOVTOESTQ: int
+
+    class Config:
+        from_attributes = True  # Permite conversão entre SQLAlchemy e Pydantic
