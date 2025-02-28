@@ -9,3 +9,14 @@ services:
       - "8000:8000"
     env_file:
       - .env  # Aponta corretamente para o .env dentro da pasta app
+    depends_on:
+      - redis  # Garante que o Redis inicie antes da aplicação
+
+  redis:
+    build: 
+      context: .
+      dockerfile: Dockerfile.redis  # Usa o Dockerfile do Redis
+    container_name: redis_container
+    restart: always
+    ports:
+      - "6379:6379"
